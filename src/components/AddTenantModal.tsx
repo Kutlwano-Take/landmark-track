@@ -22,7 +22,7 @@ export default function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenant
     email: '',
     phone: '',
     monthly_rent: '',
-    payment_day: '15' as '15' | '25' | 'month_end',
+    payment_day: '15',
     room_id: '',
   })
   const [availableRooms, setAvailableRooms] = useState<any[]>([])
@@ -54,7 +54,7 @@ export default function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenant
         email: formData.email,
         phone: formData.phone,
         monthly_rent: parseFloat(formData.monthly_rent),
-        payment_day: formData.payment_day,
+        payment_day: formData.payment_day as any,
       })
 
       if (tenantError) throw tenantError
