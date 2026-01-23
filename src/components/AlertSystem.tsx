@@ -22,15 +22,19 @@ import { supabase, alertsAPI } from '@/lib/supabase'
 
 interface Alert {
   id: string
-  type: 'late_payment' | 'damage_report' | 'room_available' | 'payment_due' | 'maintenance'
+  type: 'late_payment' | 'damage_report' | 'room_available' | 'maintenance'
   title: string
   message: string
   room_id?: string
-  severity: 'high' | 'medium' | 'low'
+  tenant_id?: string
+  severity?: 'high' | 'medium' | 'low'
   is_read: boolean
   created_at: string
-  action_required: boolean
+  action_required?: boolean
   rooms?: {
+    name: string
+  }
+  tenants?: {
     name: string
   }
 }
@@ -38,7 +42,7 @@ interface Alert {
 export default function AlertSystem() {
   const [alerts, setAlerts] = useState<Alert[]>([])
   const [loading, setLoading] = useState(true)
-  const [filterType, setFilterType] = useState<'all' | 'late_payment' | 'damage_report' | 'room_available' | 'payment_due' | 'maintenance'>('all')
+  const [filterType, setFilterType] = useState<'all' | 'late_payment' | 'damage_report' | 'room_available' | 'maintenance'>('all')
   const [filterStatus, setFilterStatus] = useState<'all' | 'read' | 'unread'>('all')
 
   useEffect(() => {
@@ -100,7 +104,7 @@ export default function AlertSystem() {
       case 'high': return 'bg-danger/20 text-danger border border-danger/30'
       case 'medium': return 'bg-warning/20 text-warning border border-warning/30'
       case 'low': return 'bg-info/20 text-info border border-info/30'
-      default: return ''
+      default: return 'bg-warning/20 text-warning border border-warning/30'
     }
   }
 
@@ -108,9 +112,8 @@ export default function AlertSystem() {
     switch (type) {
       case 'late_payment': return <CreditCard className="w-3 h-3" />
       case 'damage_report': return <AlertTriangle className="w-3 h-3" />
+      case 'maintenance': return <Home className="w-3 h-3" />
       case 'room_available': return <Home className="w-3 h-3" />
-      case 'payment_due': return <Clock className="w-3 h-3" />
-      case 'maintenance': return <User className="w-3 h-3" />
       default: return <Bell className="w-3 h-3" />
     }
   }
@@ -257,9 +260,9 @@ export default function AlertSystem() {
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <h3 className="font-medium text-text-primary">{alert.title}</h3>
-                      <Badge className={`flex items-center gap-1 ${getStatusColor(alert.severity)}`}>
+                      <Badge className={`flex items-center gap-1 ${getStatusColor(alert.severity || 'medium')}`}>
                         {getAlertIcon(alert.type)}
-                        {alert.severity.charAt(0).toUpperCase() + alert.severity.slice(1)}
+                        {alert.severity ? alert.severity.charAt(0).toUpperCase() + alert.severity.slice(1) : 'Medium'}
                       </Badge>
                       {!alert.is_read && (
                         <Badge className="bg-primary/20 text-primary border border-primary/30">

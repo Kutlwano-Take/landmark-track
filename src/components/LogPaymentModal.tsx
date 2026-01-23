@@ -70,12 +70,15 @@ export default function LogPaymentModal({ isOpen, onClose, onSuccess }: LogPayme
         payment_date: formData.payment_date,
         due_date: formData.due_date,
         payment_method: formData.payment_method,
+        status: 'paid' // Explicitly set status to 'paid' for logged payments
       }
 
+      console.log('Creating payment:', paymentData)
       const { error } = await paymentsAPI.create(paymentData)
       
       if (error) throw error
 
+      console.log('Payment created successfully')
       onSuccess()
       onClose()
       
@@ -112,7 +115,7 @@ export default function LogPaymentModal({ isOpen, onClose, onSuccess }: LogPayme
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <Card className="luxury-card w-full max-w-md">
+      <Card className="luxury-card w-full max-w-sm">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
@@ -124,17 +127,17 @@ export default function LogPaymentModal({ isOpen, onClose, onSuccess }: LogPayme
             </Button>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="tenant_id">Tenant *</Label>
+              <Label htmlFor="tenant_id" className="text-sm">Tenant *</Label>
               <Select value={formData.tenant_id} onValueChange={handleTenantChange}>
-                <SelectTrigger>
+                <SelectTrigger className="luxury-select h-9">
                   <SelectValue placeholder="Select tenant" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="luxury-select-content">
                   {tenants.map((tenant) => (
-                    <SelectItem key={tenant.id} value={tenant.id}>
+                    <SelectItem key={tenant.id} value={tenant.id} className="luxury-select-item">
                       {tenant.name}
                     </SelectItem>
                   ))}
@@ -143,14 +146,14 @@ export default function LogPaymentModal({ isOpen, onClose, onSuccess }: LogPayme
             </div>
 
             <div>
-              <Label htmlFor="room_id">Room *</Label>
+              <Label htmlFor="room_id" className="text-sm">Room *</Label>
               <Select value={formData.room_id} onValueChange={(value) => setFormData({ ...formData, room_id: value })}>
-                <SelectTrigger>
+                <SelectTrigger className="luxury-select h-9">
                   <SelectValue placeholder="Select room" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="luxury-select-content">
                   {rooms.map((room) => (
-                    <SelectItem key={room.id} value={room.id}>
+                    <SelectItem key={room.id} value={room.id} className="luxury-select-item">
                       {room.name}
                     </SelectItem>
                   ))}
@@ -159,7 +162,7 @@ export default function LogPaymentModal({ isOpen, onClose, onSuccess }: LogPayme
             </div>
 
             <div>
-              <Label htmlFor="amount">Amount (R) *</Label>
+              <Label htmlFor="amount" className="text-sm">Amount (R) *</Label>
               <Input
                 id="amount"
                 type="number"
@@ -169,22 +172,24 @@ export default function LogPaymentModal({ isOpen, onClose, onSuccess }: LogPayme
                 required
                 min="0"
                 step="0.01"
+                className="h-9"
               />
             </div>
 
             <div>
-              <Label htmlFor="payment_date">Payment Date *</Label>
+              <Label htmlFor="payment_date" className="text-sm">Payment Date *</Label>
               <Input
                 id="payment_date"
                 type="date"
                 value={formData.payment_date}
                 onChange={(e) => setFormData({ ...formData, payment_date: e.target.value })}
                 required
+                className="h-9"
               />
             </div>
 
             <div>
-              <Label htmlFor="due_date">Due Date *</Label>
+              <Label htmlFor="due_date" className="text-sm">Due Date *</Label>
               <Input
                 id="due_date"
                 type="date"
@@ -192,30 +197,43 @@ export default function LogPaymentModal({ isOpen, onClose, onSuccess }: LogPayme
                 onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
                 placeholder="2024-01-15"
                 required
+                className="h-9"
               />
             </div>
 
             <div>
-              <Label htmlFor="payment_method">Payment Method *</Label>
+              <Label htmlFor="payment_method" className="text-sm">Payment Method *</Label>
               <Select value={formData.payment_method} onValueChange={(value) => setFormData({ ...formData, payment_method: value })}>
-                <SelectTrigger>
+                <SelectTrigger className="luxury-select h-9">
                   <SelectValue placeholder="Select payment method" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                  <SelectItem value="credit_card">Credit Card</SelectItem>
-                  <SelectItem value="cash">Cash</SelectItem>
-                  <SelectItem value="electronic">EFT</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
+                <SelectContent className="luxury-select-content">
+                  <SelectItem value="bank_transfer" className="luxury-select-item">Bank Transfer</SelectItem>
+                  <SelectItem value="credit_card" className="luxury-select-item">Credit Card</SelectItem>
+                  <SelectItem value="cash" className="luxury-select-item">Cash</SelectItem>
+                  <SelectItem value="electronic" className="luxury-select-item">EFT</SelectItem>
+                  <SelectItem value="other" className="luxury-select-item">Other</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            <div className="flex gap-3 pt-4">
-              <Button type="button" variant="outline" onClick={handleClose} className="luxury-button-secondary">
+            <div className="bg-primary/10 border border-primary/20 rounded-lg p-3">
+              <div className="flex items-start gap-2">
+                <CreditCard className="w-3 h-3 text-primary mt-0.5" />
+                <div className="text-xs">
+                  <p className="font-medium text-primary">Note:</p>
+                  <p className="text-text-muted">
+                    Payment will be recorded and automatically update the tenant's payment status.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <Button type="button" variant="outline" onClick={handleClose} className="luxury-button-secondary text-sm py-2">
                 Cancel
               </Button>
-              <Button type="submit" disabled={loading} className="luxury-button">
+              <Button type="submit" disabled={loading} className="luxury-button text-sm py-2">
                 {loading ? 'Logging...' : 'Log Payment'}
               </Button>
             </div>

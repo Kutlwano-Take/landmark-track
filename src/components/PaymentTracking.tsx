@@ -54,7 +54,10 @@ export default function PaymentTracking() {
       .channel('payment_tracking_changes')
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'payments' },
-        () => loadPayments()
+        (payload) => {
+          console.log('PaymentTracking - payment change detected:', payload)
+          loadPayments()
+        }
       )
       .subscribe()
 
@@ -67,6 +70,7 @@ export default function PaymentTracking() {
     try {
       setLoading(true)
       const { data } = await paymentsAPI.getAll()
+      console.log('PaymentTracking - payments loaded:', data)
       setPayments(data || [])
     } catch (error) {
       console.error('Error loading payments:', error)

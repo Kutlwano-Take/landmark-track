@@ -12,12 +12,14 @@ import {
   TrendingUp,
   Home,
   CreditCard,
-  Bell
+  Bell,
+  X
 } from 'lucide-react'
 import { supabase, roomsAPI, paymentsAPI, alertsAPI, tenantsAPI } from '@/lib/supabase'
 import AddTenantModal from './AddTenantModal'
 import LogPaymentModal from './LogPaymentModal'
 import ReportDamageModal from './ReportDamageModal'
+import ScheduleViewModal from './ScheduleViewModal'
 
 export default function Dashboard() {
   const [stats, setStats] = useState({
@@ -37,6 +39,9 @@ export default function Dashboard() {
   const [showAddTenant, setShowAddTenant] = useState(false)
   const [showLogPayment, setShowLogPayment] = useState(false)
   const [showReportDamage, setShowReportDamage] = useState(false)
+  const [showAlertCenter, setShowAlertCenter] = useState(false)
+  const [selectedAlert, setSelectedAlert] = useState<any>(null)
+  const [showAlertDetails, setShowAlertDetails] = useState(false)
 
   useEffect(() => {
     loadDashboardData()
@@ -51,10 +56,14 @@ export default function Dashboard() {
       .subscribe()
 
     const paymentSubscription = supabase
-      .channel('payment_changes')
+      .channel('dashboard_payment_changes')
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'payments' },
-        () => loadDashboardData()
+        (payload) => {
+          console.log('Dashboard - payment change detected:', payload)
+          console.log('Dashboard - reloading data...')
+          loadDashboardData()
+        }
       )
       .subscribe()
 
@@ -90,9 +99,10 @@ export default function Dashboard() {
       const { data: rooms } = await roomsAPI.getAll()
       const roomsData = rooms || []
       
-      // Load payments data
-      const { data: payments } = await paymentsAPI.getAll()
-      const paymentsData = payments || []
+      // Load payments
+      const { data: paymentsData } = await paymentsAPI.getAll()
+      console.log('Dashboard payments data:', paymentsData)
+      const payments = paymentsData || []
       
       // Load alerts data
       const { data: alertsData } = await alertsAPI.getAll()
@@ -102,16 +112,26 @@ export default function Dashboard() {
       const { data: tenants } = await tenantsAPI.getAll()
       const tenantsData = tenants || []
 
-      // Calculate stats
+      // Calculate room stats
       const occupiedRooms = roomsData.filter(room => room.status === 'secured').length
       const availableRooms = roomsData.filter(room => room.status === 'available').length
       const damagedRooms = roomsData.filter(room => room.status === 'damaged').length
       
-      const paidPayments = paymentsData.filter(payment => payment.status === 'paid')
-      const overduePayments = paymentsData.filter(payment => payment.status === 'overdue')
-      const upcomingPayments = paymentsData.filter(payment => payment.status === 'pending')
+      // Calculate payment stats - filter for current month
+      const currentMonth = new Date().toISOString().slice(0, 7) // YYYY-MM
+      const currentMonthPayments = paymentsData.filter(payment => 
+        payment.due_date.startsWith(currentMonth)
+      )
       
-      const totalRent = paidPayments.reduce((sum, payment) => sum + (payment.amount || 0), 0)
+      const paidPayments = currentMonthPayments.filter(payment => payment.status === 'paid')
+      const overduePayments = currentMonthPayments.filter(payment => payment.status === 'overdue')
+      const upcomingPayments = currentMonthPayments.filter(payment => payment.status === 'pending')
+      
+      // Monthly Revenue = sum of all paid payments for current month
+      const monthlyRevenue = paidPayments.reduce((sum, payment) => sum + (payment.amount || 0), 0)
+      
+      // Active Alerts = all unread alerts
+      const activeAlerts = alertsList.filter(alert => !alert.is_read)
 
       // Set stats
       setStats({
@@ -119,50 +139,128 @@ export default function Dashboard() {
         occupiedRooms,
         availableRooms,
         damagedRooms,
-        totalRent,
+        totalRent: monthlyRevenue, // Changed to monthlyRevenue for clarity
         overduePayments: overduePayments.length,
         upcomingPayments: upcomingPayments.length,
-        alerts: alertsList.filter(alert => !alert.is_read).length
+        alerts: activeAlerts.length
       })
 
       // Set recent activity from real data
       const activity: any[] = []
       
-      // Add recent tenants
-      tenantsData.slice(0, 3).forEach(tenant => {
+      // Add recent tenants (last 3)
+      const recentTenants = tenantsData
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        .slice(0, 3)
+      
+      recentTenants.forEach(tenant => {
         activity.push({
           id: `tenant-${tenant.id}`,
           type: 'tenant',
           message: `New tenant added: ${tenant.name}`,
-          time: new Date(tenant.created_at).toLocaleDateString()
+          time: new Date(tenant.created_at).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          })
         })
       })
       
-      // Add recent payments
-      paidPayments.slice(0, 3).forEach(payment => {
+      // Add recent payments (last 5 payments of any status)
+      const recentPayments = paymentsData
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        .slice(0, 5)
+      
+      recentPayments.forEach(payment => {
+        let message = ''
+        let type = 'payment'
+        
+        switch (payment.status) {
+          case 'paid':
+            message = `Payment received for ${payment.rooms?.name || 'Unknown room'} - $${payment.amount}`
+            type = 'payment'
+            break
+          case 'pending':
+            message = `Payment pending for ${payment.rooms?.name || 'Unknown room'} - $${payment.amount}`
+            type = 'pending'
+            break
+          case 'overdue':
+            message = `Payment overdue for ${payment.rooms?.name || 'Unknown room'} - $${payment.amount}`
+            type = 'overdue'
+            break
+          default:
+            message = `Payment updated for ${payment.rooms?.name || 'Unknown room'} - $${payment.amount}`
+            type = 'payment'
+        }
+        
         activity.push({
           id: `payment-${payment.id}`,
-          type: 'payment',
-          message: `Payment received for ${payment.rooms?.name || 'Unknown room'}`,
-          time: new Date(payment.created_at).toLocaleDateString()
+          type: type,
+          message: message,
+          time: new Date(payment.created_at).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          })
         })
       })
       
-      // Add recent damage reports
-      const damageAlerts = alertsList.filter(alert => alert.type === 'damage_report').slice(0, 2)
+      // Add recent damage reports (last 2)
+      const damageAlerts = alertsList
+        .filter(alert => alert.type === 'damage_report')
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        .slice(0, 2)
+      
       damageAlerts.forEach(alert => {
         activity.push({
           id: `damage-${alert.id}`,
           type: 'damage',
           message: alert.message,
-          time: new Date(alert.created_at).toLocaleDateString()
+          time: new Date(alert.created_at).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          })
         })
       })
 
+      // Add recent payment overdue alerts (last 2)
+      const paymentAlerts = alertsList
+        .filter(alert => alert.type === 'late_payment')
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        .slice(0, 2)
+      
+      paymentAlerts.forEach(alert => {
+        activity.push({
+          id: `payment-${alert.id}`,
+          type: 'payment',
+          message: alert.message,
+          time: new Date(alert.created_at).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          })
+        })
+      })
+
+      // Sort activity by most recent
+      activity.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
+      console.log('Recent activity generated (sorted):', activity.slice(0, 10)) // Show top 10
       setRecentActivity(activity)
 
-      // Set alerts
-      setAlerts(alertsList.slice(0, 5)) // Show latest 5 alerts
+      // Set alerts - show latest 5 unread alerts, or all alerts if less than 5 unread
+      const alertsToShow = activeAlerts.length > 0 ? 
+        activeAlerts.slice(0, 5) : 
+        alertsList.slice(0, 5)
+      setAlerts(alertsToShow)
       
     } catch (error) {
       console.error('Error loading dashboard data:', error)
@@ -185,6 +283,25 @@ export default function Dashboard() {
     loadDashboardData()
   }
 
+  const handleViewAlertDetails = (alert: any) => {
+    setSelectedAlert(alert)
+    setShowAlertDetails(true)
+  }
+
+  const handleDeleteAlert = async (alertId: string) => {
+    try {
+      await alertsAPI.delete(alertId)
+      loadDashboardData()
+    } catch (error) {
+      console.error('Error deleting alert:', error)
+    }
+  }
+
+  const handleViewAllAlerts = () => {
+    // Navigate to alerts page - for now we'll use a simple approach
+    window.location.href = '/alerts'
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background p-6">
@@ -205,7 +322,7 @@ export default function Dashboard() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <Card className="luxury-card">
+        <Card className="luxury-card hover:scale-105 transition-transform duration-300 cursor-pointer hover:shadow-lg hover:shadow-primary/20">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -220,7 +337,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card className="luxury-card">
+        <Card className="luxury-card hover:scale-105 transition-transform duration-300 cursor-pointer hover:shadow-lg hover:shadow-success/20">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -235,7 +352,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card className="luxury-card">
+        <Card className="luxury-card hover:scale-105 transition-transform duration-300 cursor-pointer hover:shadow-lg hover:shadow-error/20">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -250,7 +367,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card className="luxury-card">
+        <Card className="luxury-card hover:scale-105 transition-transform duration-300 cursor-pointer hover:shadow-lg hover:shadow-warning/20">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -299,6 +416,8 @@ export default function Dashboard() {
                     <div className="flex items-center gap-3">
                       <div className={`w-2 h-2 rounded-full ${
                         activity.type === 'payment' ? 'bg-success' : 
+                        activity.type === 'pending' ? 'bg-primary' : 
+                        activity.type === 'overdue' ? 'bg-danger' : 
                         activity.type === 'damage' ? 'bg-warning' : 'bg-primary'
                       }`} />
                       <span className="text-sm">{activity.message}</span>
@@ -324,7 +443,9 @@ export default function Dashboard() {
               {alerts.map((alert) => (
                 <div key={alert.id} className={`alert-card alert-${
                   alert.type === 'late_payment' ? 'late-payment' : 
-                  alert.type === 'damage' ? 'damage' : 'available'
+                  alert.type === 'damage_report' ? 'damage' : 
+                  alert.type === 'maintenance' ? 'maintenance' :
+                  'available'
                 }`}>
                   <div className="flex items-start justify-between">
                     <div>
@@ -333,24 +454,41 @@ export default function Dashboard() {
                     </div>
                     <Badge className={`${
                       alert.type === 'late_payment' ? 'bg-error/20 text-error' : 
-                      'bg-warning/20 text-warning'
+                      alert.type === 'damage_report' ? 'bg-warning/20 text-warning' :
+                      alert.type === 'maintenance' ? 'bg-info/20 text-info' :
+                      'bg-success/20 text-success'
                     }`}>
-                      {alert.type === 'late_payment' ? 'High' : 'Medium'}
+                      {alert.type === 'late_payment' ? 'High' : 
+                       alert.type === 'damage_report' ? 'Medium' :
+                       alert.type === 'maintenance' ? 'Medium' :
+                       'Low'}
                     </Badge>
                   </div>
                   <div className="mt-3 flex gap-2">
-                    <Button size="sm" className="luxury-button text-xs py-2 px-3">
+                    <Button 
+                      size="sm" 
+                      className="luxury-button text-xs py-2 px-3"
+                      onClick={() => handleViewAlertDetails(alert)}
+                    >
                       View Details
                     </Button>
-                    <Button size="sm" variant="outline" className="luxury-button-secondary text-xs py-2 px-3">
-                      Dismiss
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="luxury-button-secondary text-xs py-2 px-3"
+                      onClick={() => handleDeleteAlert(alert.id)}
+                    >
+                      Delete
                     </Button>
                   </div>
                 </div>
               ))}
             </div>
             
-            <Button className="w-full mt-4 luxury-button">
+            <Button 
+              className="w-full mt-4 luxury-button"
+              onClick={handleViewAllAlerts}
+            >
               View All Alerts
             </Button>
           </CardContent>
@@ -376,9 +514,9 @@ export default function Dashboard() {
               <AlertTriangle className="w-4 h-4" />
               Report Damage
             </Button>
-            <Button className="luxury-button flex items-center gap-2">
-              <Calendar className="w-4 h-4" />
-              Schedule View
+            <Button className="luxury-button flex items-center gap-2" onClick={() => setShowAlertCenter(true)}>
+              <AlertTriangle className="w-4 h-4" />
+              Alert Center
             </Button>
           </div>
         </CardContent>
@@ -402,6 +540,98 @@ export default function Dashboard() {
         onClose={() => setShowReportDamage(false)}
         onSuccess={handleReportDamageSuccess}
       />
+
+      <ScheduleViewModal 
+        isOpen={showAlertCenter} 
+        onClose={() => setShowAlertCenter(false)}
+        onSuccess={loadDashboardData}
+      />
+
+      {/* Alert Details Modal */}
+      {showAlertDetails && selectedAlert && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-surface rounded-xl max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-semibold text-text-primary">Alert Details</h3>
+              <button
+                onClick={() => setShowAlertDetails(false)}
+                className="text-text-muted hover:text-text-primary"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm text-text-muted mb-1">Type</p>
+                <Badge className={`capitalize ${
+                  selectedAlert.type === 'late_payment' ? 'bg-error/20 text-error' : 
+                  selectedAlert.type === 'damage_report' ? 'bg-warning/20 text-warning' : 
+                  'bg-primary/20 text-primary'
+                }`}>
+                  {selectedAlert.type.replace('_', ' ')}
+                </Badge>
+              </div>
+              
+              <div>
+                <p className="text-sm text-text-muted mb-1">Title</p>
+                <p className="text-text-primary font-medium">{selectedAlert.title}</p>
+              </div>
+              
+              <div>
+                <p className="text-sm text-text-muted mb-1">Message</p>
+                <p className="text-text-primary">{selectedAlert.message}</p>
+              </div>
+              
+              {selectedAlert.rooms && (
+                <div>
+                  <p className="text-sm text-text-muted mb-1">Room</p>
+                  <p className="text-text-primary">{selectedAlert.rooms.name}</p>
+                </div>
+              )}
+              
+              <div>
+                <p className="text-sm text-text-muted mb-1">Created</p>
+                <p className="text-text-primary">
+                  {new Date(selectedAlert.created_at).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </p>
+              </div>
+              
+              <div>
+                <p className="text-sm text-text-muted mb-1">Priority</p>
+                <Badge className={
+                  selectedAlert.type === 'late_payment' ? 'bg-error/20 text-error' : 
+                  'bg-warning/20 text-warning'
+                }>
+                  {selectedAlert.type === 'late_payment' ? 'High' : 'Medium'}
+                </Badge>
+              </div>
+            </div>
+            
+            <div className="flex gap-3 mt-6">
+              <Button 
+                className="flex-1 luxury-button"
+                onClick={() => handleDeleteAlert(selectedAlert.id)}
+              >
+                Delete Alert
+              </Button>
+              <Button 
+                variant="outline" 
+                className="flex-1 luxury-button-secondary"
+                onClick={() => setShowAlertDetails(false)}
+              >
+                Close
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

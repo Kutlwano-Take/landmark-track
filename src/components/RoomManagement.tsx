@@ -14,7 +14,8 @@ import {
   Home, 
   User, 
   AlertTriangle,
-  MoreHorizontal
+  Trash2,
+  X
 } from 'lucide-react'
 import { supabase, roomsAPI } from '@/lib/supabase'
 
@@ -41,6 +42,8 @@ export default function RoomManagement() {
   const [showAddRoom, setShowAddRoom] = useState(false)
   const [showStatusModal, setShowStatusModal] = useState(false)
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [roomToDelete, setRoomToDelete] = useState<Room | null>(null)
   const [newRoomData, setNewRoomData] = useState({
     name: '',
     status: 'available' as 'available' | 'secured' | 'damaged',
@@ -55,7 +58,21 @@ export default function RoomManagement() {
       .channel('room_management_changes')
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'rooms' },
-        () => loadRooms()
+        (payload) => {
+          console.log('Real-time room change detected:', payload)
+          console.log('Event type:', payload.eventType)
+          console.log('Room ID:', payload.new?.id || payload.old?.id)
+          
+          if (payload.eventType === 'DELETE') {
+            console.log('Room deleted - refreshing room list')
+          } else if (payload.eventType === 'INSERT') {
+            console.log('Room added - refreshing room list')
+          } else if (payload.eventType === 'UPDATE') {
+            console.log('Room updated - refreshing room list')
+          }
+          
+          loadRooms()
+        }
       )
       .subscribe()
 
@@ -66,8 +83,10 @@ export default function RoomManagement() {
 
   const loadRooms = async () => {
     try {
+      console.log('Loading rooms...')
       setLoading(true)
       const { data } = await roomsAPI.getAll()
+      console.log('Rooms loaded:', data)
       setRooms(data || [])
     } catch (error) {
       console.error('Error loading rooms:', error)
@@ -78,17 +97,52 @@ export default function RoomManagement() {
 
   const handleAddRoom = async () => {
     try {
-      await roomsAPI.create({
+      // Validate required fields
+      if (!newRoomData.name.trim()) {
+        alert('Please enter a room name')
+        return
+      }
+
+      console.log('Adding room:', newRoomData)
+      
+      // Get or create default property
+      let propertyId = '550e8400-e29b-41d4-a716-446655440000'
+      
+      // Try to get the first property, otherwise use default
+      const { data: properties } = await supabase
+        .from('properties')
+        .select('id')
+        .limit(1)
+      
+      if (properties && properties.length > 0) {
+        propertyId = properties[0].id
+      }
+      
+      const { data, error } = await roomsAPI.create({
         name: newRoomData.name,
         status: newRoomData.status,
-        property_id: '550e8400-e29b-41d4-a716-446655440000' // Default property ID
+        property_id: propertyId
       })
       
+      if (error) {
+        console.error('Database error:', error)
+        throw error
+      }
+      
+      console.log('Room created successfully:', data)
+      
+      // Reset form and close modal
       setNewRoomData({ name: '', status: 'available', rent: '' })
       setShowAddRoom(false)
+      
+      // The real-time subscription will automatically update the rooms list
     } catch (error) {
       console.error('Error adding room:', error)
-      alert('Error adding room. Please try again.')
+      let errorMessage = 'Error adding room. Please try again.'
+      if (error && typeof error === 'object' && 'message' in error) {
+        errorMessage = `Error: ${error.message}`
+      }
+      alert(errorMessage)
     }
   }
 
@@ -96,15 +150,67 @@ export default function RoomManagement() {
     if (!selectedRoom) return
     
     try {
-      await roomsAPI.update(selectedRoom.id, {
+      console.log('Updating room status:', selectedRoom.id, 'to:', selectedRoom.status)
+      
+      const { data, error } = await roomsAPI.update(selectedRoom.id, {
         status: selectedRoom.status
       })
       
+      if (error) {
+        console.error('Database error:', error)
+        throw error
+      }
+      
+      console.log('Room status updated successfully:', data)
+      
+      // Close modal and reset selection
       setShowStatusModal(false)
       setSelectedRoom(null)
+      
+      // The real-time subscription will automatically update the rooms list
+      // and the dashboard will also update through its own real-time subscription
     } catch (error) {
       console.error('Error updating room status:', error)
-      alert('Error updating room status. Please try again.')
+      let errorMessage = 'Error updating room status. Please try again.'
+      if (error && typeof error === 'object' && 'message' in error) {
+        errorMessage = `Error: ${error.message}`
+      }
+      alert(errorMessage)
+    }
+  }
+
+  const handleDeleteRoom = async () => {
+    if (!roomToDelete) return
+    
+    try {
+      console.log('Deleting room:', roomToDelete.id, roomToDelete.name)
+      
+      const { error } = await roomsAPI.delete(roomToDelete.id)
+      
+      if (error) {
+        console.error('Database error:', error)
+        throw error
+      }
+      
+      console.log('Room deleted successfully - refreshing page')
+      
+      // Close modal and reset selection
+      setShowDeleteConfirm(false)
+      setRoomToDelete(null)
+      
+      // Automatically refresh the page to show the room has been removed
+      setTimeout(() => {
+        // Use current URL to avoid 404 errors
+        window.location.reload()
+      }, 500)
+      
+    } catch (error) {
+      console.error('Error deleting room:', error)
+      let errorMessage = 'Error deleting room. Please try again.'
+      if (error && typeof error === 'object' && 'message' in error) {
+        errorMessage = `Error: ${error.message}`
+      }
+      alert(errorMessage)
     }
   }
 
@@ -293,8 +399,16 @@ export default function RoomManagement() {
                     >
                       Update Status
                     </Button>
-                    <Button size="sm" variant="ghost" className="text-text-muted hover:text-text-primary">
-                      <MoreHorizontal className="w-4 h-4" />
+                    <Button 
+                      size="sm" 
+                      variant="ghost" 
+                      className="text-danger hover:bg-danger/10 hover:text-danger p-1 border border-white/20"
+                      onClick={() => {
+                        setRoomToDelete(room)
+                        setShowDeleteConfirm(true)
+                      }}
+                    >
+                      <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
                 </div>
@@ -315,7 +429,7 @@ export default function RoomManagement() {
                   Add New Room
                 </span>
                 <Button variant="ghost" size="sm" onClick={() => setShowAddRoom(false)}>
-                  <MoreHorizontal className="w-4 h-4" />
+                  <X className="w-4 h-4" />
                 </Button>
               </CardTitle>
             </CardHeader>
@@ -369,7 +483,7 @@ export default function RoomManagement() {
                   Update Room Status
                 </span>
                 <Button variant="ghost" size="sm" onClick={() => setShowStatusModal(false)}>
-                  <MoreHorizontal className="w-4 h-4" />
+                  <X className="w-4 h-4" />
                 </Button>
               </CardTitle>
             </CardHeader>
@@ -395,6 +509,50 @@ export default function RoomManagement() {
                 </Button>
                 <Button onClick={handleStatusUpdate} className="luxury-button text-sm py-2">
                   Update Status
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && roomToDelete && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="luxury-card w-full max-w-md">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <Trash2 className="w-5 h-5 text-danger" />
+                  Delete Room
+                </span>
+                <Button variant="ghost" size="sm" onClick={() => setShowDeleteConfirm(false)}>
+                  <X className="w-4 h-4" />
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <p className="text-sm text-text-muted mb-2">
+                  Are you sure you want to delete this room?
+                </p>
+                <div className="p-3 bg-surface/50 rounded-lg">
+                  <p className="font-medium">{roomToDelete.name}</p>
+                  <p className="text-sm text-text-muted">
+                    Status: {roomToDelete.status.charAt(0).toUpperCase() + roomToDelete.status.slice(1)}
+                  </p>
+                </div>
+                <p className="text-xs text-danger mt-2">
+                  This action cannot be undone. All associated data will be permanently deleted.
+                </p>
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <Button type="button" variant="outline" onClick={() => setShowDeleteConfirm(false)} className="luxury-button-secondary text-sm py-2">
+                  Cancel
+                </Button>
+                <Button onClick={handleDeleteRoom} className="bg-danger hover:bg-danger/90 text-white text-sm py-2 border border-white/30">
+                  Delete Room
                 </Button>
               </div>
             </CardContent>

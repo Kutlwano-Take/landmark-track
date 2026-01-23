@@ -17,7 +17,7 @@ import { supabase } from '@/lib/supabase'
 import Dashboard from './Dashboard'
 import RoomManagement from './RoomManagement'
 import PaymentTracking from './PaymentTracking'
-import AlertSystem from './AlertSystem'
+import AlertsPage from '../app/alerts/page'
 import SettingsPage from './SettingsPage'
 
 export default function Navigation() {
@@ -45,7 +45,7 @@ export default function Navigation() {
       case 'payments':
         return <PaymentTracking />
       case 'alerts':
-        return <AlertSystem />
+        return <AlertsPage />
       case 'settings':
         return <SettingsPage />
       default:
@@ -58,7 +58,7 @@ export default function Navigation() {
   return (
     <div className="min-h-screen bg-background flex">
       {/* Mobile menu button */}
-      <div className="lg:hidden fixed top-4 left-4 z-50">
+      <div className="lg:hidden fixed top-4 right-4 z-50">
         <Button
           variant="ghost"
           size="sm"

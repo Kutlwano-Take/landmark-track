@@ -26,18 +26,34 @@ export default function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenant
     room_id: '',
   })
   const [availableRooms, setAvailableRooms] = useState<any[]>([])
+  const [randomRoomNumbers, setRandomRoomNumbers] = useState<number[]>([])
 
   useEffect(() => {
     if (isOpen) {
-      loadAvailableRooms()
+      loadAllRooms()
+      generateRandomRoomNumbers()
     }
   }, [isOpen])
 
-  const loadAvailableRooms = async () => {
+  const generateRandomRoomNumbers = () => {
+    // Generate 10 random room numbers between 100-999
+    const numbers = new Set<number>()
+    while (numbers.size < 10) {
+      numbers.add(Math.floor(Math.random() * 900) + 100)
+    }
+    setRandomRoomNumbers(Array.from(numbers).sort((a, b) => a - b))
+  }
+
+  const loadAllRooms = async () => {
     try {
       const { data } = await roomsAPI.getAll()
-      const available = data?.filter(room => room.status === 'available') || []
-      setAvailableRooms(available)
+      // Load all rooms to check which ones are taken by tenants
+      const allRooms = data || []
+      setAvailableRooms(allRooms)
+      
+      // Check if there are more than 10 rooms total
+      const totalRooms = allRooms.length
+      console.log('Total rooms:', totalRooms, 'All rooms loaded for tenant assignment')
     } catch (error) {
       console.error('Error loading rooms:', error)
     }
@@ -61,14 +77,35 @@ export default function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenant
 
       // If room is selected, assign tenant to room
       if (formData.room_id && formData.room_id !== 'none' && tenant?.[0]?.id) {
-        await roomsAPI.update(formData.room_id, {
+        // Handle room selection format (room-XXX where XXX is random number)
+        let actualRoomId = formData.room_id
+        if (formData.room_id.startsWith('room-')) {
+          const roomNumber = formData.room_id.replace('room-', '')
+          const room = availableRooms.find(r => r.name === `Room ${roomNumber}`)
+          if (room) {
+            actualRoomId = room.id
+          } else {
+            // Create the room if it doesn't exist
+            console.log('Creating new room:', roomNumber)
+            const { data: newRoom } = await roomsAPI.create({
+              name: `Room ${roomNumber}`,
+              status: 'secured',
+              property_id: '550e8400-e29b-41d4-a716-446655440000' // Default property
+            })
+            if (newRoom && newRoom[0]) {
+              actualRoomId = newRoom[0].id
+            }
+          }
+        }
+        
+        await roomsAPI.update(actualRoomId, {
           tenant_id: tenant[0].id,
           status: 'secured'
         })
 
         // Update tenant with room_id
         await tenantsAPI.update(tenant[0].id, {
-          room_id: formData.room_id
+          room_id: actualRoomId
         })
       }
 
@@ -195,13 +232,46 @@ export default function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenant
                 </SelectTrigger>
                 <SelectContent className="luxury-select-content">
                   <SelectItem className="luxury-select-item" value="none">No room assignment</SelectItem>
-                  {availableRooms.map((room) => (
-                    <SelectItem key={room.id} value={room.id} className="luxury-select-item">
-                      {room.name}
-                    </SelectItem>
-                  ))}
+                  
+                  {/* Show 10 random room numbers */}
+                  {randomRoomNumbers.map((roomNumber) => {
+                    const room = availableRooms.find(r => r.name === `Room ${roomNumber}`)
+                    const isTakenByTenant = room && room.status === 'secured' && room.tenant_id
+                    
+                    return (
+                      <SelectItem 
+                        key={roomNumber} 
+                        value={`room-${roomNumber}`} 
+                        className="luxury-select-item"
+                        disabled={isTakenByTenant}
+                      >
+                        Room {roomNumber}
+                      </SelectItem>
+                    )
+                  })}
+                  
+                  {/* Show message if more rooms are needed */}
+                  {availableRooms.length > 10 && (
+                    <div className="px-2 py-1 text-xs text-text-muted border-t">
+                      More rooms available on Rooms page →
+                    </div>
+                  )}
                 </SelectContent>
               </Select>
+              
+              {availableRooms.length >= 10 && (
+                <div className="bg-info/10 border border-info/20 rounded-lg p-3 mt-2">
+                  <div className="flex items-start gap-2">
+                    <User className="w-3 h-3 text-info mt-0.5" />
+                    <div className="text-xs">
+                      <p className="font-medium text-info">Room Limit:</p>
+                  <p className="text-text-muted">
+                    For more than 10 rooms, please add additional rooms manually on the Rooms page.
+                  </p>
+                </div>
+              </div>
+            </div>
+              )}
             </div>
 
             <div className="bg-warning/10 border border-warning/20 rounded-lg p-3">

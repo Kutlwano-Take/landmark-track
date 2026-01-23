@@ -1,30 +1,30 @@
-# 🏢 Landmark Track - Luxury Property Management System
+# Landmark Track - Luxury Property Management System
 
 A sophisticated, real-time property management solution designed for luxury rental properties. Built with Next.js 14, TypeScript, and Supabase for seamless data management and live updates.
 
-## ✨ Features
+## Features
 
-### 🏠 **Property Management**
+### **Property Management**
 - **Room Status Tracking** - Monitor available, secured, and damaged rooms in real-time
 - **Tenant Management** - Complete tenant profiles with payment schedules
 - **Dynamic Room Assignment** - Easy tenant-to-room matching with status updates
 
-### 💳 **Payment Tracking**
+### **Payment Tracking**
 - **Real-time Payment Monitoring** - Track paid, pending, and overdue payments
 - **Payment Schedule Overview** - Visual calendar showing upcoming due dates
 - **Automated Payment Logging** - Streamlined payment recording system
 
-### 🔔 **Alert System**
+### **Alert System**
 - **Smart Notifications** - Late payments, damage reports, room availability alerts
 - **Alert History** - Complete audit trail of all notifications
 - **Real-time Updates** - Instant alerts for critical events
 
-### 📊 **Dashboard Analytics**
+### **Dashboard Analytics**
 - **Live Statistics** - Occupancy rates, revenue tracking, and performance metrics
 - **Recent Activity Feed** - Real-time updates on all property activities
 - **Quick Actions** - One-click access to common tasks
 
-### 🎨 **Premium UI/UX**
+### **Premium UI/UX**
 - **Luxury Dark Theme** - Professional design with gold accent colors
 - **Responsive Design** - Optimized for desktop, tablet, and mobile devices
 - **Smooth Animations** - Elegant transitions and micro-interactions
@@ -37,7 +37,7 @@ A sophisticated, real-time property management solution designed for luxury rent
 - **Authentication**: Supabase Auth
 - **Deployment**: Vercel-ready
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 - Node.js 18+ 
@@ -73,11 +73,11 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) to view the application.
 
-## 📱 Live Demo
+## Live Demo
 
 Deployed on Vercel: [landmark-track.vercel.app](https://landmark-track.vercel.app)
 
-## 🏗️ Project Structure
+## Project Structure
 
 ```
 src/
@@ -105,7 +105,7 @@ The application uses a comprehensive property management schema:
 ### Real-time Features
 All components use Supabase real-time subscriptions for instant data updates across connected clients.
 
-## 🚀 Deployment
+## Deployment
 
 ### Vercel (Recommended)
 1. Push to GitHub
@@ -119,7 +119,7 @@ npm run build
 npm start
 ```
 
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
@@ -127,11 +127,11 @@ npm start
 4. Push to branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## 📄 License
+## License
 
 This project is licensed under the ISC License.
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - Built with [Next.js](https://nextjs.org)
 - UI components from [shadcn/ui](https://ui.shadcn.com)
@@ -140,4 +140,4 @@ This project is licensed under the ISC License.
 
 ---
 
-**Landmark Track** - Elevating Property Management to Luxury Standards 🏢✨
+**Landmark Track** - Elevating Property Management to Luxury Standards 

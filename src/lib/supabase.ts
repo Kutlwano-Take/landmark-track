@@ -147,6 +147,14 @@ export const alertsAPI = {
       .update({ is_read: true })
       .eq('id', id)
     return { error }
+  },
+
+  async delete(id: string) {
+    const { error } = await supabase
+      .from('alerts')
+      .delete()
+      .eq('id', id)
+    return { error }
   }
 }
 
