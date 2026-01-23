@@ -1,26 +1,194 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --font-inter: var(--font-inter);
+  --font-playfair: var(--font-playfair);
+  --background: #0F1117;
+  --foreground: #F8F9FA;
+  --surface: #1A1D29;
+  --surface-light: #252836;
+  --primary: #C9A96E;
+  --primary-dark: #B89B5F;
+  --border: #374151;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-inter), system-ui, sans-serif;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-playfair), serif;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  .luxury-card {
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    backdrop-filter: blur(2px);
+  }
+
+  .luxury-button {
+    background-color: var(--primary);
+    color: white;
+    font-weight: 500;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.75rem;
+    transition: all 0.2s;
+    box-shadow: 0 4px 14px 0 rgba(201, 169, 110, 0.39);
+  }
+
+  .luxury-button:hover {
+    background-color: var(--primary-dark);
+    box-shadow: 0 2px 8px 0 rgba(201, 169, 110, 0.2);
+    transform: scale(1.05);
+  }
+
+  .luxury-button-secondary {
+    background-color: var(--surface);
+    border: 1px solid var(--primary);
+    color: var(--primary);
+    font-weight: 500;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.75rem;
+    transition: all 0.2s;
+  }
+
+  .luxury-button-secondary:hover {
+    background-color: var(--surface-light);
+  }
+
+  /* Select dropdown styling */
+  .luxury-select {
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--foreground);
+    transition: all 0.2s ease;
+  }
+
+  .luxury-select:hover {
+    border-color: var(--primary);
+  }
+
+  .luxury-select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(201, 169, 110, 0.2);
+  }
+
+  .luxury-select-content {
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    max-height: 200px;
+    overflow-y: auto;
+    animation: slideDown 0.2s ease-out;
+  }
+
+  .luxury-select-item {
+    color: var(--foreground);
+    transition: all 0.15s ease;
+    border-radius: 0.25rem;
+    margin: 0.125rem;
+  }
+
+  .luxury-select-item:hover {
+    background-color: rgba(201, 169, 110, 0.2);
+    color: var(--primary);
+  }
+
+  .luxury-select-item:focus {
+    background-color: rgba(201, 169, 110, 0.3);
+    color: var(--primary);
+  }
+
+  .status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+
+  .status-available {
+    background-color: rgba(10, 108, 116, 0.2);
+    color: #0A6C74;
+    border: 1px solid rgba(10, 108, 116, 0.3);
+  }
+
+  .status-secured {
+    background-color: rgba(201, 169, 110, 0.2);
+    color: var(--primary);
+    border: 1px solid rgba(201, 169, 110, 0.3);
+  }
+
+  .status-damaged {
+    background-color: rgba(212, 165, 116, 0.2);
+    color: #D4A574;
+    border: 1px solid rgba(212, 165, 116, 0.3);
+  }
+
+  .alert-card {
+    border-left: 4px solid;
+    padding: 1rem;
+    animation: slideUp 0.3s ease-out;
+  }
+
+  .alert-late-payment {
+    border-left-color: #A83232;
+  }
+
+  .alert-damage {
+    border-left-color: #D4A574;
+  }
+
+  .alert-available {
+    border-left-color: #0A6C74;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    background: linear-gradient(to right, var(--primary), var(--primary-dark));
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+  }
+
+  .glass-effect {
+    background-color: rgba(26, 29, 41, 0.8);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(55, 65, 81, 0.5);
+  }
+}
+
+@keyframes slideUp {
+  0% {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideDown {
+  0% {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
