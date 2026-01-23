@@ -1,36 +1,143 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🏢 Landmark Track - Luxury Property Management System
 
-## Getting Started
+A sophisticated, real-time property management solution designed for luxury rental properties. Built with Next.js 14, TypeScript, and Supabase for seamless data management and live updates.
 
-First, run the development server:
+## ✨ Features
 
+### 🏠 **Property Management**
+- **Room Status Tracking** - Monitor available, secured, and damaged rooms in real-time
+- **Tenant Management** - Complete tenant profiles with payment schedules
+- **Dynamic Room Assignment** - Easy tenant-to-room matching with status updates
+
+### 💳 **Payment Tracking**
+- **Real-time Payment Monitoring** - Track paid, pending, and overdue payments
+- **Payment Schedule Overview** - Visual calendar showing upcoming due dates
+- **Automated Payment Logging** - Streamlined payment recording system
+
+### 🔔 **Alert System**
+- **Smart Notifications** - Late payments, damage reports, room availability alerts
+- **Alert History** - Complete audit trail of all notifications
+- **Real-time Updates** - Instant alerts for critical events
+
+### 📊 **Dashboard Analytics**
+- **Live Statistics** - Occupancy rates, revenue tracking, and performance metrics
+- **Recent Activity Feed** - Real-time updates on all property activities
+- **Quick Actions** - One-click access to common tasks
+
+### 🎨 **Premium UI/UX**
+- **Luxury Dark Theme** - Professional design with gold accent colors
+- **Responsive Design** - Optimized for desktop, tablet, and mobile devices
+- **Smooth Animations** - Elegant transitions and micro-interactions
+
+## 🛠 Tech Stack
+
+- **Frontend**: Next.js 14, React 18, TypeScript
+- **Styling**: Tailwind CSS, shadcn/ui components
+- **Backend**: Supabase (PostgreSQL, Real-time subscriptions)
+- **Authentication**: Supabase Auth
+- **Deployment**: Vercel-ready
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js 18+ 
+- Supabase project (create at [supabase.com](https://supabase.com))
+
+### Installation
+
+1. **Clone the repository**
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/Kutlwano-Take/landmark-track.git
+cd landmark-track
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. **Install dependencies**
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. **Environment Setup**
+Create a `.env.local` file with your Supabase credentials:
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. **Database Setup**
+Run the SQL schema from `supabase-schema.sql` in your Supabase project.
 
-## Learn More
+5. **Start Development Server**
+```bash
+npm run dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+Open [http://localhost:3000](http://localhost:3000) to view the application.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 📱 Live Demo
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Deployed on Vercel: [landmark-track.vercel.app](https://landmark-track.vercel.app)
 
-## Deploy on Vercel
+## 🏗️ Project Structure
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```
+src/
+├── app/                 # Next.js app router
+├── components/          # React components
+│   ├── ui/             # Reusable UI components
+│   ├── Dashboard.tsx   # Main dashboard
+│   ├── RoomManagement.tsx
+│   ├── PaymentTracking.tsx
+│   └── AlertSystem.tsx
+├── lib/                # Utilities and API
+└── types/              # TypeScript definitions
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🔧 Configuration
+
+### Database Schema
+The application uses a comprehensive property management schema:
+- **Properties** - Building/complex information
+- **Rooms** - Individual rental units
+- **Tenants** - Resident information and payment schedules
+- **Payments** - Transaction records
+- **Alerts** - System notifications
+
+### Real-time Features
+All components use Supabase real-time subscriptions for instant data updates across connected clients.
+
+## 🚀 Deployment
+
+### Vercel (Recommended)
+1. Push to GitHub
+2. Import repository in [Vercel](https://vercel.com)
+3. Add environment variables
+4. Deploy automatically
+
+### Manual Deployment
+```bash
+npm run build
+npm start
+```
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the ISC License.
+
+## 🙏 Acknowledgments
+
+- Built with [Next.js](https://nextjs.org)
+- UI components from [shadcn/ui](https://ui.shadcn.com)
+- Backend powered by [Supabase](https://supabase.com)
+- Styled with [Tailwind CSS](https://tailwindcss.com)
+
+---
+
+**Landmark Track** - Elevating Property Management to Luxury Standards 🏢✨
