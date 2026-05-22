@@ -1,33 +1,54 @@
 import type { Metadata } from "next";
-import { Inter, Playfair_Display } from "next/font/google";
+import { Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
+import { AuthProvider } from "@/lib/auth-context";
+import { Toaster } from "sonner";
+import Providers from "@/components/Providers";
 
 const inter = Inter({
-  variable: "--font-inter",
   subsets: ["latin"],
+  variable: "--font-inter",
 });
 
-const playfair = Playfair_Display({
-  variable: "--font-playfair",
+const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
+  variable: "--font-space-grotesk",
 });
 
 export const metadata: Metadata = {
-  title: "Landmark Track - Luxury Property Management",
-  description: "Premium property management system for discerning landlords",
+  title: "Landmark Track — Property & Rental Management",
+  description:
+    "All-in-one property management for landlords. Track properties, units, tenants, leases, rent collection, and maintenance.",
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{
+          __html: `
+            (function() {
+              try {
+                var t = localStorage.getItem('theme');
+                document.documentElement.className = (!t || t === 'dark') ? 'dark' : 'light';
+              } catch(e) {}
+            })();
+          `,
+        }} />
+      </head>
       <body
-        className={`${inter.variable} ${playfair.variable} font-sans antialiased bg-background text-text-primary`}
+        className={`${inter.variable} ${spaceGrotesk.variable} font-sans antialiased bg-background text-text-primary`}
       >
-        {children}
+        <Providers>
+          <AuthProvider>
+            {children}
+            <Toaster richColors position="top-right" />
+          </AuthProvider>
+        </Providers>
       </body>
     </html>
   );

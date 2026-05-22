@@ -3,194 +3,183 @@
 @tailwind utilities;
 
 :root {
-  --font-inter: var(--font-inter);
-  --font-playfair: var(--font-playfair);
-  --background: #0F1117;
-  --foreground: #F8F9FA;
-  --surface: #1A1D29;
-  --surface-light: #252836;
-  --primary: #C9A96E;
-  --primary-dark: #B89B5F;
-  --border: #374151;
+  --background: #0a0e1a;
+  --foreground: #f0f4f8;
+  --surface: #111827;
+  --surface-light: #1e293b;
+  --primary: #10b981;
+  --primary-dark: #059669;
+  --primary-light: #34d399;
+  --success: #10b981;
+  --success-light: rgba(16, 185, 129, 0.15);
+  --error: #ef4444;
+  --error-light: rgba(239, 68, 68, 0.15);
+  --warning: #f59e0b;
+  --warning-light: rgba(245, 158, 11, 0.15);
+  --info: #3b82f6;
+  --info-light: rgba(59, 130, 246, 0.15);
+  --text-primary: #f0f4f8;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --border: rgba(148, 163, 184, 0.15);
+}
+
+.light {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --surface: #ffffff;
+  --surface-light: #f1f5f9;
+  --primary: #059669;
+  --primary-dark: #047857;
+  --primary-light: #10b981;
+  --success: #059669;
+  --success-light: rgba(5, 150, 105, 0.12);
+  --error: #dc2626;
+  --error-light: rgba(220, 38, 38, 0.12);
+  --warning: #d97706;
+  --warning-light: rgba(217, 119, 6, 0.12);
+  --info: #2563eb;
+  --info-light: rgba(37, 99, 235, 0.12);
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --border: rgba(15, 23, 42, 0.1);
 }
 
 @layer base {
   * {
-    border-color: hsl(var(--border));
+    border-color: var(--border);
   }
-
   body {
     background-color: var(--background);
-    color: var(--foreground);
-    font-family: var(--font-inter), system-ui, sans-serif;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    color: var(--text-primary);
+    font-family: 'Inter', system-ui, sans-serif;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
-
-  h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-playfair), serif;
+  h1, h2, h3, h4 {
+    font-family: 'Space Grotesk', 'Inter', sans-serif;
+    letter-spacing: -0.02em;
   }
 }
 
 @layer components {
-  .luxury-card {
-    background-color: var(--surface);
+  .card-gradient {
+    background: linear-gradient(135deg, var(--surface) 0%, var(--surface-light) 100%);
     border: 1px solid var(--border);
     border-radius: 1rem;
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-    backdrop-filter: blur(2px);
   }
-
-  .luxury-button {
+  .btn-primary {
     background-color: var(--primary);
     color: white;
     font-weight: 500;
-    padding: 0.75rem 1.5rem;
-    border-radius: 0.75rem;
-    transition: all 0.2s;
-    box-shadow: 0 4px 14px 0 rgba(201, 169, 110, 0.39);
-  }
-
-  .luxury-button:hover {
-    background-color: var(--primary-dark);
-    box-shadow: 0 2px 8px 0 rgba(201, 169, 110, 0.2);
-    transform: scale(1.05);
-  }
-
-  .luxury-button-secondary {
-    background-color: var(--surface);
-    border: 1px solid var(--primary);
-    color: var(--primary);
-    font-weight: 500;
-    padding: 0.75rem 1.5rem;
-    border-radius: 0.75rem;
-    transition: all 0.2s;
-  }
-
-  .luxury-button-secondary:hover {
-    background-color: var(--surface-light);
-  }
-
-  /* Select dropdown styling */
-  .luxury-select {
-    background-color: var(--surface);
-    border: 1px solid var(--border);
-    color: var(--foreground);
-    transition: all 0.2s ease;
-  }
-
-  .luxury-select:hover {
-    border-color: var(--primary);
-  }
-
-  .luxury-select:focus {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 2px rgba(201, 169, 110, 0.2);
-  }
-
-  .luxury-select-content {
-    background-color: var(--surface);
-    border: 1px solid var(--border);
+    padding: 0.5rem 1rem;
     border-radius: 0.5rem;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-    max-height: 200px;
-    overflow-y: auto;
-    animation: slideDown 0.2s ease-out;
+    transition: all 0.2s;
   }
-
-  .luxury-select-item {
-    color: var(--foreground);
-    transition: all 0.15s ease;
-    border-radius: 0.25rem;
-    margin: 0.125rem;
+  .btn-primary:hover {
+    background-color: var(--primary-dark);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
   }
-
-  .luxury-select-item:hover {
-    background-color: rgba(201, 169, 110, 0.2);
-    color: var(--primary);
+  .btn-secondary {
+    background-color: var(--surface-light);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s;
   }
-
-  .luxury-select-item:focus {
-    background-color: rgba(201, 169, 110, 0.3);
-    color: var(--primary);
+  .btn-secondary:hover {
+    background-color: var(--surface);
+    border-color: var(--primary);
   }
-
   .status-badge {
-    padding: 0.25rem 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.125rem 0.625rem;
     border-radius: 9999px;
     font-size: 0.75rem;
     font-weight: 500;
+    white-space: nowrap;
   }
-
-  .status-available {
-    background-color: rgba(10, 108, 116, 0.2);
-    color: #0A6C74;
-    border: 1px solid rgba(10, 108, 116, 0.3);
+  .status-paid {
+    background-color: var(--success-light);
+    color: var(--success);
+    border: 1px solid rgba(16, 185, 129, 0.2);
   }
-
-  .status-secured {
-    background-color: rgba(201, 169, 110, 0.2);
-    color: var(--primary);
-    border: 1px solid rgba(201, 169, 110, 0.3);
+  .status-overdue {
+    background-color: var(--error-light);
+    color: var(--error);
+    border: 1px solid rgba(239, 68, 68, 0.2);
   }
-
+  .status-pending {
+    background-color: var(--warning-light);
+    color: var(--warning);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+  }
+  .status-occupied {
+    background-color: var(--success-light);
+    color: var(--success);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+  }
+  .status-vacant {
+    background-color: var(--info-light);
+    color: var(--info);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+  }
   .status-damaged {
-    background-color: rgba(212, 165, 116, 0.2);
-    color: #D4A574;
-    border: 1px solid rgba(212, 165, 116, 0.3);
+    background-color: var(--error-light);
+    color: var(--error);
+    border: 1px solid rgba(239, 68, 68, 0.2);
   }
-
-  .alert-card {
-    border-left: 4px solid;
-    padding: 1rem;
-    animation: slideUp 0.3s ease-out;
+  .input-field {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    transition: all 0.2s;
   }
-
-  .alert-late-payment {
-    border-left-color: #A83232;
+  .input-field:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.15);
   }
-
-  .alert-damage {
-    border-left-color: #D4A574;
-  }
-
-  .alert-available {
-    border-left-color: #0A6C74;
+  .input-field::placeholder {
+    color: var(--text-muted);
   }
 }
 
 @layer utilities {
   .text-gradient {
-    background: linear-gradient(to right, var(--primary), var(--primary-dark));
+    background: linear-gradient(to right, var(--primary), var(--primary-light));
     background-clip: text;
     -webkit-background-clip: text;
     color: transparent;
   }
-
-  .glass-effect {
-    background-color: rgba(26, 29, 41, 0.8);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(55, 65, 81, 0.5);
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
   }
 }
 
-@keyframes slideUp {
-  0% {
-    transform: translateY(10px);
-    opacity: 0;
-  }
-  100% {
-    transform: translateY(0);
-    opacity: 1;
-  }
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
 }
-
-@keyframes slideDown {
-  0% {
-    transform: translateY(-10px);
-    opacity: 0;
-  }
-  100% {
-    transform: translateY(0);
-    opacity: 1;
-  }
+::-webkit-scrollbar-track {
+  background: var(--surface);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
 }
