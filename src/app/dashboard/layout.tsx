@@ -86,7 +86,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Sidebar */}
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 w-64 bg-surface border-r border-border transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:z-auto flex flex-col',
+          'fixed inset-y-0 left-0 z-50 w-64 bg-surface border-r border-border transform transition-transform duration-200 ease-in-out lg:translate-x-0 flex flex-col',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full',
         )}
       >
@@ -132,9 +132,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
       </aside>
 
-      <div className="lg:pl-64">
+      <div className="lg:pl-64 min-h-screen flex flex-col">
         {/* Top Bar */}
-        <header className="h-16 border-b border-border bg-background/80 backdrop-blur sticky top-0 z-30 flex items-center justify-between px-4 lg:px-8">
+        <header className="h-16 border-b border-border bg-background/80 backdrop-blur sticky top-0 z-30 flex items-center justify-between px-4 lg:px-8 shrink-0">
           <button
             className="lg:hidden p-2 rounded-lg hover:bg-surface-light"
             onClick={() => setSidebarOpen(true)}
@@ -142,15 +142,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <Menu className="h-5 w-5" />
           </button>
 
-          <div className="hidden lg:flex items-center gap-3">
-            <div className="flex items-center gap-2 text-sm text-text-secondary">
-              <Building2 className="h-4 w-4" />
-              {NAV_ITEMS.find((i) => pathname.startsWith(i.href))?.label ?? 'Dashboard'}
-            </div>
-            <CommandSearch />
+        <div className="hidden lg:flex items-center gap-3">
+          <div className="flex items-center gap-2 text-sm text-text-secondary">
+            <Building2 className="h-4 w-4" />
+            {NAV_ITEMS.find((i) => pathname.startsWith(i.href))?.label ?? 'Dashboard'}
           </div>
+          <CommandSearch />
+        </div>
 
-          <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1">
             <ThemeToggle />
             {/* Notifications */}
             <div className="relative">
@@ -218,7 +218,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </header>
 
         {/* Main Content */}
-        <main className="p-4 lg:p-8 pb-20 lg:pb-8">{children}</main>
+        <main className="flex-1 p-4 lg:p-8 pb-20 lg:pb-8">{children}</main>
       </div>
 
       {/* Mobile Bottom Nav */}
